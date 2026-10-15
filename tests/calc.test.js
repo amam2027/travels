@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { lengthOf, itemPlanned, calc, pace, expenseHome, isVariableExpense, expensesCSV, rateOf } from "../docs/js/calc.js";
+import { lengthOf, itemPlanned, calc, pace, expenseHome, isVariableExpense, expensesCSV, rateOf, sharedBalance } from "../docs/js/calc.js";
 
 const state = { home: "CHF", rates: { CHF: 1, EUR: 0.9 } };
 
@@ -108,9 +108,9 @@ test("CSV export quotes awkward values and lists oldest first", () => {
     { id: "1", catId: "b", itemId: "b1", amount: 10, cur: "EUR", rate: 0.95, homeAmount: 9.5, date: "2026-05-02", note: 'pizza, "best"' },
   ] });
   const lines = expensesCSV(state, t).trim().split("\r\n");
-  assert.equal(lines[0], "date,category,line,note,amount,currency,rate,home_amount,home_currency");
-  assert.equal(lines[1], '2026-05-02,Food,Meals,"pizza, ""best""",10,EUR,0.95,9.5,CHF');
-  assert.equal(lines[2], "2026-05-03,Food,,,5,CHF,1,5,CHF");
+  assert.equal(lines[0], "date,category,line,note,amount,currency,rate,split_between,paid_by,my_share_home,home_currency");
+  assert.equal(lines[1], '2026-05-02,Food,Meals,"pizza, ""best""",10,EUR,0.95,1,me,9.5,CHF');
+  assert.equal(lines[2], "2026-05-03,Food,,,5,CHF,1,1,me,5,CHF");
 });
 
 test("a whole-category expense counts as booked when the category's budget is all booked", () => {
@@ -119,4 +119,19 @@ test("a whole-category expense counts as booked when the category's budget is al
   assert.equal(isVariableExpense({ catId: "b", itemId: null }, t), true);    // Food: estimate
   const empty = trip({ cats: [{ id: "z", name: "Misc", items: [] }] });
   assert.equal(isVariableExpense({ catId: "z", itemId: null }, empty), true);
+});
+
+test("a split expense counts only your share, and the shared balance nets out", () => {
+  const t = trip({ exp: [
+    // You paid USD 250 for a room for 4: your share is 62.50, friends owe you 187.50 (rate 1 for simplicity).
+    { id: "1", catId: "a", itemId: null, amount: 250, cur: "CHF", rate: 1, homeAmount: 62.5, split: 4, paidBy: "me" },
+    // A friend paid 100 for dinner for 4: your share is 25, which you owe.
+    { id: "2", catId: "b", itemId: null, amount: 100, cur: "CHF", rate: 1, homeAmount: 25, split: 4, paidBy: "other" },
+    { id: "3", catId: "b", itemId: null, amount: 10, cur: "CHF", rate: 1, homeAmount: 10 },
+  ] });
+  assert.equal(calc(state, t).spent, 97.5);
+  assert.deepEqual(sharedBalance(t), { owed: 187.5, owe: 25, net: 162.5 });
+  const csv = expensesCSV(state, t).trim().split("\r\n");
+  assert.ok(csv.some(l => l.endsWith(",250,CHF,1,4,me,62.5,CHF")));
+  assert.ok(csv.some(l => l.endsWith(",100,CHF,1,4,someone else,25,CHF")));
 });

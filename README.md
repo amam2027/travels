@@ -55,6 +55,13 @@ category needs several costs (a hotel and an Airbnb, say), use **Split into seve
 **Logging.** Tap **+**, type the amount, tap a category, tap **Add**. The currency starts on
 the trip's local currency (tap it to change) and your last category is already selected.
 
+**Sharing costs with friends.** When you log an expense, enter the full amount and tap
+**Split**: choose how many people share it (you included) and who paid. Only your share counts
+towards your budget and daily allowance. **Activity** shows the running balance — what
+friends owe you for things you paid, minus what you owe for things they paid — and a
+**Shared** filter. Any expense, including an imported bank payment, can be split later by
+tapping it.
+
 **Everything else.**
 
 - **Home:** what's left to spend, today's allowance and pace, categories and recent expenses.

@@ -495,3 +495,22 @@ button.tint:active,button.plainblock:active{transform:scale(.985)}
 .catpick .ic .letter{font-size:11px}
 .row select{border:0;background:var(--fill);border-radius:10px;height:36px;padding:0 10px;font-size:15px;max-width:55%;color:var(--ink)}
 .pace .big .perweek{display:block;font-size:15px;font-weight:550;color:var(--muted);letter-spacing:0;margin-top:4px}
+
+/* split costs */
+.toolrow{display:flex;gap:8px;margin-top:14px;flex:none}
+.toolrow .noterow{flex:1;margin-top:0;min-width:0}
+.splitbtn{display:flex;align-items:center;gap:6px;height:48px;padding:0 14px;border-radius:14px;background:var(--fill);font-weight:600;font-size:15px;flex:none;
+  transition:background-color .15s,color .15s}
+.splitbtn .i{width:19px;height:19px}
+.splitbtn.on{background:var(--btn);color:var(--btn-ink)}
+.split-total{text-align:center;color:var(--muted);font-size:15.5px;margin-top:8px}
+.split-total + .bigstep{margin-top:22px}
+.shared{margin:0 0 16px}
+.shared .top .i{width:20px;height:20px;color:var(--pos)}
+.shared .big{font-size:24px;font-weight:700;letter-spacing:-.02em;margin-top:4px}
+.shared .note:empty{display:none}
+.fchip .i{width:16px;height:16px}
+.shared .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.shared .lbl{font-size:14.5px;color:var(--muted);font-weight:500}
+.shared .note{font-size:14px;color:var(--muted);margin-top:6px;line-height:1.45}
+.sheet .switchrow + .preview{margin:16px 0 20px}

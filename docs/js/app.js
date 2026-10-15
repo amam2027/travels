@@ -1,5 +1,5 @@
 import * as store from "./store.js";
-import { HUES, localDate, rateOf, lengthOf, itemPlanned, expenseHome, calc, pace, expensesCSV } from "./calc.js";
+import { HUES, localDate, rateOf, lengthOf, itemPlanned, expenseHome, calc, pace, expensesCSV, sharedBalance } from "./calc.js";
 import { fetchLive, allCurrencies } from "./rates.js";
 import { $, esc, uid, plural, fmt, fmtUpTo2, money, money2, currencyName, fmtDate, fmtDay, fmtRange } from "./util.js";
 import { icon, catIcon } from "./icons.js";
@@ -61,7 +61,7 @@ function normalize(p) {
     delete t.days;
     t = Object.assign({ name: "Trip", dest: "", cur: "", start: "", end: "", people: 1, saved: 0 }, t);
     t.cats = (t.cats || []).map(c => Object.assign({ name: "" }, c, { items: c.items || [] }));
-    t.exp = (t.exp || []).map(e => Object.assign({ note: "", date: "", itemId: null }, e, {
+    t.exp = (t.exp || []).map(e => Object.assign({ note: "", date: "", itemId: null, split: 1, paidBy: "me" }, e, {
       homeAmount: e.homeAmount != null ? e.homeAmount : (Number(e.amount) || 0) * (Number(e.rate) || 0),
       home: e.home || out.home,
     }));
@@ -203,7 +203,8 @@ function expRow(e, t, withDay, inCat) {
       '<span class="ic" style="--h:' + hue(t, e.catId) + '">' + catIcon(c ? c.name : "") + "</span>" +
       '<span class="main"><span class="ttl">' + esc(title) + "</span>" + (sub ? '<span class="sub">' + esc(sub) + "</span>" : "") + "</span>" +
       '<span class="end"><span class="amt">' + M2(expenseHome(e)) + "</span>" +
-        (e.cur !== s.home ? '<span class="amt2">' + money2(e.amount, e.cur) + "</span>" : "") + "</span>" +
+        (e.split > 1 ? '<span class="amt2">÷' + e.split + " of " + money2(e.amount, e.cur) + "</span>"
+          : e.cur !== s.home ? '<span class="amt2">' + money2(e.amount, e.cur) + "</span>" : "") + "</span>" +
     "</button></div>";
 }
 function catRow(t, cc) {
@@ -346,11 +347,20 @@ function viewActivity(t, c) {
       '<button class="btn" data-act="log">' + icon("plus") + "Add expense</button>" +
       '<button class="txtbtn" data-act="import" style="margin-top:8px">Import from bank (CSV)</button></div>';
   }
-  if (filter && !t.cats.some(x => x.id === filter)) filter = null;
+  const hasShared = t.exp.some(e => e.split > 1);
+  if (filter && filter !== "shared" && !t.cats.some(x => x.id === filter)) filter = null;
+  if (filter === "shared" && !hasShared) filter = null;
+  if (hasShared) {
+    const b = sharedBalance(t);
+    const line = Math.abs(b.net) < 0.01 ? "You're all square" : b.net > 0 ? "Friends owe you " + M2(b.net) : "You owe " + M2(-b.net);
+    h += '<button class="tint shared" data-act="filter" data-id="shared"><div class="top"><div class="lbl">Shared costs</div>' + icon("users") + "</div>" +
+      '<div class="big">' + line + '</div><p class="note">' + (b.owed > 0 && b.owe > 0 ? M2(b.owed) + " owed to you · " + M2(b.owe) + " you owe" : "") + "</p></button>";
+  }
   h += '<div class="hscroll" role="toolbar" aria-label="Filter by category"><button class="fchip" data-act="filter" data-id="" aria-pressed="' + !filter + '">All</button>' +
+    (hasShared ? '<button class="fchip" data-act="filter" data-id="shared" aria-pressed="' + (filter === "shared") + '">' + icon("users") + "Shared</button>" : "") +
     c.cats.filter(cc => cc.spent > 0).map(cc => '<button class="fchip" style="--h:' + cc.color + '" data-act="filter" data-id="' + cc.id + '" aria-pressed="' +
       (filter === cc.id) + '"><span class="dot"></span>' + esc(cc.name || "Untitled") + "</button>").join("") + "</div>";
-  const list = sortedExp(t.exp.filter(e => !filter || e.catId === filter));
+  const list = sortedExp(t.exp.filter(e => !filter || (filter === "shared" ? e.split > 1 : e.catId === filter)));
   const days = [];
   for (const e of list) {
     const last = days[days.length - 1];

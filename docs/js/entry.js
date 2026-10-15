@@ -15,6 +15,8 @@ export function openEntry(ctx, existing) {
   let catId = editing ? existing.catId : null;
   let itemId = editing ? existing.itemId : null;
   let date = editing ? existing.date : localDate();
+  let split = editing ? Math.max(1, Number(existing.split) || 1) : 1;      // people sharing the cost, you included
+  let paidBy = editing && existing.paidBy === "other" ? "other" : "me";
   if (!editing) {
     ctx.ensureCurrency(cur);
     const last = s.lastCat[t.id];
@@ -36,7 +38,8 @@ export function openEntry(ctx, existing) {
           "</div>" +
           '<div class="hscroll catrow" role="radiogroup" aria-label="Category"></div>' +
           '<div class="hscroll linerow" role="radiogroup" aria-label="Line"></div>' +
-          '<label class="noterow">' + icon("note") + '<input type="text" placeholder="Add a note" aria-label="Note" autocomplete="off" enterkeyhint="done"></label>' +
+          '<div class="toolrow"><label class="noterow">' + icon("note") + '<input type="text" placeholder="Add a note" aria-label="Note" autocomplete="off" enterkeyhint="done"></label>' +
+          '<button class="splitbtn" data-split>' + icon("users") + "<span></span></button></div>" +
         "</div>" +
         '<div class="entry-foot">' +
           '<div class="keypad">' + ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "del"].map(k =>
@@ -72,9 +75,22 @@ export function openEntry(ctx, existing) {
         drawSave();
       }
 
+      function drawSplit() {
+        const b = q("[data-split]");
+        b.classList.toggle("on", split > 1);
+        b.querySelector("span").textContent = split > 1 ? "÷" + split : "Split";
+        b.setAttribute("aria-label", split > 1 ? "Split between " + split + " people, " + (paidBy === "me" ? "you paid" : "someone else paid") + ". Change" : "Split this cost");
+      }
+
       function drawConv() {
         const conv = q(".conv"), r = rateNow();
         conv.classList.remove("warn");
+        if (split > 1 && r > 0) {
+          const share = value() / split;
+          conv.textContent = "Your share " + money2(share, cur) + (cur !== s.home ? " ≈ " + money2(share * r, s.home) : "") +
+            (paidBy === "other" ? " · someone else paid" : "");
+          return;
+        }
         if (cur === s.home) { conv.textContent = ""; return; }
         if (r > 0) { conv.textContent = "≈ " + money2(value() * r, s.home); return; }
         if (conv.querySelector("input")) return;
@@ -132,7 +148,7 @@ export function openEntry(ctx, existing) {
         const r = rateNow(), a = value();
         const exp = {
           ...(editing ? existing : { id: uid(), at: new Date().toISOString() }),
-          catId, itemId: itemId || null, amount: a, cur, rate: r, homeAmount: a * r,
+          catId, itemId: itemId || null, amount: a, cur, rate: r, homeAmount: a * r / split, split, paidBy,
           home: editing && cur === existing.cur ? existing.home : s.home,
           date: dateInput.value || localDate(), note: note.value.trim(),
         };
@@ -140,6 +156,10 @@ export function openEntry(ctx, existing) {
         ctx.save(exp, !editing);
       }
 
+      q("[data-split]").addEventListener("click", async () => {
+        const res = await openSplit({ total: value(), cur, split, paidBy });
+        if (res) { split = res.split; paidBy = res.paidBy; q(".conv").innerHTML = ""; drawSplit(); drawConv(); }
+      });
       q(".keypad").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (b) key(b.dataset.k); });
       q("[data-cur]").addEventListener("click", async () => {
         const c = await pickCurrency({ title: "Currency", current: cur, suggested: [t.cur, s.home, ...ctx.curList()], all: ctx.allCurrencies });
@@ -174,7 +194,47 @@ export function openEntry(ctx, existing) {
         else if (e.key === "Enter" && !e.target.closest("button")) { save(); e.preventDefault(); }
       });
 
-      drawDate(); drawCats(); drawAmount();
+      drawDate(); drawCats(); drawSplit(); drawAmount();
     },
+  });
+}
+
+// "Split this cost": how many people share it, and who paid. Resolves { split, paidBy } or null.
+function openSplit({ total, cur, split, paidBy }) {
+  return new Promise(resolve => {
+    let result = null, n = split > 1 ? split : 2, who = paidBy;
+    openSheet({
+      label: "Split cost",
+      render(el, api) {
+        el.insertAdjacentHTML("beforeend", head("Split cost", '<button class="txtbtn" data-close>Cancel</button>', '<button class="txtbtn strong" data-done>Done</button>') +
+          '<div class="sheet-body">' +
+            '<p class="split-total">' + (total > 0 ? money2(total, cur) + " in total" : "Enter the full amount, then split it") + "</p>" +
+            '<div class="bigstep"><button data-step="-1" aria-label="Fewer people">−</button><div><output></output><span>people, including you</span></div>' +
+            '<button data-step="1" aria-label="More people">+</button></div>' +
+            '<div class="switchrow"><div class="ttl">Who paid?</div><div class="seg" role="group" aria-label="Who paid"><button data-who="me">You</button><button data-who="other">Someone else</button></div></div>' +
+            '<p class="preview" data-prev></p>' +
+            (split > 1 ? '<button class="btn secondary" data-none>Don\'t split</button>' : "") +
+          "</div>");
+        const q = x => el.querySelector(x);
+        function draw() {
+          q("output").textContent = n;
+          q('[data-step="-1"]').disabled = n <= 2;
+          el.querySelectorAll("[data-who]").forEach(b => b.setAttribute("aria-pressed", b.dataset.who === who));
+          const share = total / n;
+          q("[data-prev]").innerHTML = total > 0
+            ? "Your share is <b>" + money2(share, cur) + "</b>. " + (who === "me"
+              ? "The others owe you " + money2(total - share, cur) + "."
+              : "You owe " + money2(share, cur) + " to whoever paid.")
+            : "Only your share counts towards your budget.";
+        }
+        el.querySelectorAll("[data-step]").forEach(b => b.addEventListener("click", () => { n = Math.max(2, Math.min(30, n + Number(b.dataset.step))); draw(); }));
+        el.querySelectorAll("[data-who]").forEach(b => b.addEventListener("click", () => { who = b.dataset.who; draw(); }));
+        q("[data-done]").addEventListener("click", () => { result = { split: n, paidBy: who }; api.close(); });
+        const none = q("[data-none]");
+        if (none) none.addEventListener("click", () => { result = { split: 1, paidBy: "me" }; api.close(); });
+        draw();
+      },
+      onClose: () => resolve(result),
+    });
   });
 }

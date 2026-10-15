@@ -34,7 +34,7 @@ export function itemPlanned(it, rate, days, nights, people) {
   return b;
 }
 
-// Home-currency value, fixed at the rate stored when it was logged.
+// Home-currency value of *your share*, fixed at the rate stored when it was logged.
 export function expenseHome(e) {
   if (e.homeAmount != null && !isNaN(Number(e.homeAmount))) return Number(e.homeAmount);
   return (Number(e.amount) || 0) * (Number(e.rate) || 0);
@@ -98,18 +98,32 @@ export function pace(t, c, today) {
   };
 }
 
+// Shared costs: what friends owe you for things you paid, and what you owe for things they paid.
+export function sharedBalance(t) {
+  let owed = 0, owe = 0;
+  for (const e of t.exp) {
+    const n = Math.max(1, Number(e.split) || 1);
+    if (n < 2) continue;
+    const share = expenseHome(e);
+    if (e.paidBy === "other") owe += share;
+    else owed += share * (n - 1);
+  }
+  return { owed, owe, net: owed - owe };
+}
+
 export function csvCell(v) {
   const t = v == null ? "" : String(v);
   return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
 }
 
 export function expensesCSV(s, t) {
-  const rows = [["date", "category", "line", "note", "amount", "currency", "rate", "home_amount", "home_currency"]];
+  const rows = [["date", "category", "line", "note", "amount", "currency", "rate", "split_between", "paid_by", "my_share_home", "home_currency"]];
   const sorted = t.exp.slice().sort((a, b) => (a.date + (a.at || "")).localeCompare(b.date + (b.at || "")));
   for (const e of sorted) {
     const c = t.cats.find(x => x.id === e.catId);
     const it = c && e.itemId ? c.items.find(x => x.id === e.itemId) : null;
     rows.push([e.date, c ? c.name : "", it ? it.name : "", e.note || "", e.amount, e.cur, e.rate,
+      Math.max(1, Number(e.split) || 1), e.paidBy === "other" ? "someone else" : "me",
       Math.round(expenseHome(e) * 100) / 100, e.home || s.home]);
   }
   return rows.map(r => r.map(csvCell).join(",")).join("\r\n") + "\r\n";

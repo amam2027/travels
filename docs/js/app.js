@@ -7,6 +7,7 @@ import { openSheet, head, confirmSheet, pickCurrency, topSheet } from "./sheets.
 import { openEntry } from "./entry.js";
 import { openNewTrip, PRESETS } from "./newtrip.js";
 import { calendar } from "./calendar.js";
+import { importFile } from "./importer.js";
 
 const KEY = "state";
 const CURS = allCurrencies();
@@ -335,11 +336,13 @@ function savingsCard(t, c) {
 
 function viewActivity(t, c) {
   if (pristine(t)) return needTrip("Activity");
-  let h = '<div class="lt"><div class="eyebrow">' + esc(t.name || "Untitled") + "</div><h1>Activity</h1></div>";
+  let h = '<div class="lt ltrow"><div><div class="eyebrow">' + esc(t.name || "Untitled") + "</div><h1>Activity</h1></div>" +
+    (t.exp.length ? '<button class="link" data-act="import">' + icon("download") + "Import</button>" : "") + "</div>";
   if (!t.exp.length) {
     return h + '<div class="emptystate"><span class="ic plain">' + icon("activity") + "</span><h3>No expenses yet</h3>" +
-      "<p>Every time you pay for something, tap + and it lands here.</p>" +
-      '<button class="btn" data-act="log">' + icon("plus") + "Add expense</button></div>";
+      "<p>Every time you pay for something, tap + and it lands here. Or bring in card payments from your bank's CSV export.</p>" +
+      '<button class="btn" data-act="log">' + icon("plus") + "Add expense</button>" +
+      '<button class="txtbtn" data-act="import" style="margin-top:8px">Import from bank (CSV)</button></div>';
   }
   if (filter && !t.cats.some(x => x.id === filter)) filter = null;
   h += '<div class="hscroll" role="toolbar" aria-label="Filter by category"><button class="fchip" data-act="filter" data-id="" aria-pressed="' + !filter + '">All</button>' +
@@ -412,6 +415,7 @@ function viewSettings(t) {
     '<button class="row" data-act="backup"><span class="ic plain">' + icon("upload") + '</span><span class="main"><span class="ttl">Back up all data</span><span class="sub">' +
       (s.lastBackup ? "Last backup " + fmtDate(s.lastBackup) : "Never backed up") + "</span></span></button>" +
     '<button class="row" data-act="restore"><span class="ic plain">' + icon("download") + '</span><span class="main"><span class="ttl">Restore a backup</span></span></button>' +
+    '<button class="row" data-act="import"><span class="ic plain">' + icon("download") + '</span><span class="main"><span class="ttl">Import from bank</span><span class="sub">Card payments from a CSV export</span></span></button>' +
     '<button class="row" data-act="csv"><span class="ic plain">' + icon("file") + '</span><span class="main"><span class="ttl">Export expenses</span><span class="sub">CSV for ' +
       esc(t.name || "this trip") + "</span></span></button></div>" +
     '<p class="foot">' + (storageOk ? "Everything stays on this device. The only thing the app fetches is exchange rates."
@@ -576,6 +580,12 @@ const actions = {
   home: changeHome,
   dupTrip: duplicateTrip,
   backup, restore: () => $("restoreFile").click(), csv: exportCSV,
+  import: () => {
+    const t = trip();
+    if (pristine(t)) { startNewTrip(); return; }
+    if (!t.cats.length) { toast("Add a category first", false); return; }
+    $("importFile").click();
+  },
 };
 document.addEventListener("click", e => {
   const el = e.target.closest("[data-act]");
@@ -591,6 +601,7 @@ $("undo").addEventListener("click", () => {
   if (undoData.type === "cat") { t.cats.splice(undoData.index, 0, undoData.cat); t.exp = t.exp.concat(undoData.exp); }
   else if (undoData.type === "item") undoData.cat.items.splice(undoData.index, 0, undoData.item);
   else if (undoData.type === "add") t.exp = t.exp.filter(x => x.id !== undoData.item.id);
+  else if (undoData.type === "bulk") t.exp = t.exp.filter(x => !undoData.ids.includes(x.id));
   else if (undoData.type === "edit") { const i = t.exp.findIndex(x => x.id === undoData.item.id); if (i >= 0) t.exp[i] = undoData.item; }
   else if (undoData.type === "trip") {
     s.trips = s.trips.filter(x => !pristine(x));
@@ -1103,6 +1114,24 @@ async function backup() {
     toast("Backup saved", false);
   }
 }
+$("importFile").addEventListener("change", e => {
+  const f = e.target.files[0];
+  e.target.value = "";
+  if (!f) return;
+  importFile({
+    state: () => s, trip, rate, ensureCurrency, hues: HUES, today,
+    add(list) {
+      const t = trip();
+      t.exp.push(...list);
+      undoData = { type: "bulk", tripId: t.id, ids: list.map(x => x.id) };
+      persist(true);
+      if (route.tab !== "activity" || route.detail) { route = { tab: "activity", detail: null }; }
+      render();
+      toast("Imported " + plural(list.length, "expense"), true);
+    },
+  }, f).catch(err => { console.error("Import failed:", err); toast("Couldn't read that file", false); });
+});
+
 $("restoreFile").addEventListener("change", async e => {
   const f = e.target.files[0];
   e.target.value = "";

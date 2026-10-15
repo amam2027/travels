@@ -22,7 +22,8 @@ After the first open, the app works fully offline: planning, logging expenses, e
 - Only on the device, in the app's own storage. Nothing is sent anywhere.
 - The code is public on GitHub. Your trips and expenses are not: anyone who opens the link
   sees an empty app.
-- The only network request the app makes is for exchange rates (see below).
+- The only network request the app makes is for exchange rates (see below). Bank files you
+  import are read on the phone and never uploaded.
 
 ### Back it up
 
@@ -65,6 +66,25 @@ the trip's local currency (tap it to change) and your last category is already s
 - **Settings:** home currency, exchange rates, backup and restore, CSV export.
 
 Swipe a sheet down to close it. The app follows your phone's light or dark mode.
+
+### Importing card payments from your bank
+
+In UBS e-banking, export the account's transactions as CSV and save the file to Files. In the
+app, go to **Activity → Import** (or **Settings → Import from bank**) and pick the file.
+
+- It's read on the phone. Nothing is uploaded.
+- Only money going out is listed, and by default only payments during the trip's dates.
+- Each payment gets a suggested category, from the merchant name or the bank's own category
+  (Groceries → Food & drinks, Public transport → Getting around). Tap one to change it.
+  Choosing a category for one merchant fills it in for that merchant's other payments.
+- Anything that looks like an expense you already logged by hand (same day ±1, amount within
+  3%) is left unticked. Importing the same file again never adds duplicates.
+- The amount is what your bank actually charged, so it includes any card fees and the bank's
+  exchange rate.
+- If the app picks the wrong columns, tap **Columns** and choose them yourself. It reads
+  English, German and French exports, comma- or semicolon-separated.
+
+The whole import can be undone from the message that appears afterwards.
 
 ### Exchange rates
 

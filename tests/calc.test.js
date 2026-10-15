@@ -87,19 +87,42 @@ test("variable spend excludes expenses on fixed lines", () => {
 });
 
 test("pace: before, during and after the trip", () => {
-  const t = trip({ exp: [{ id: "1", catId: "b", itemId: "b1", amount: 100, cur: "CHF", rate: 1, homeAmount: 100 }] });
-  const c = calc(state, t);                     // variable plan 200 over 5 days = 40/day
+  const t = trip({ exp: [{ id: "1", catId: "b", itemId: "b1", amount: 100, cur: "CHF", rate: 1, homeAmount: 100, date: "2026-05-01" }] });
+  const c = calc(state, t);                     // flexible plan 200 over 5 days = 40/day
   assert.deepEqual(pace(t, c, "2026-04-28"), { phase: "before", daysToGo: 3, daily: 40 });
-  const p = pace(t, c, "2026-05-02");           // day 2: plan says 80 by tonight
+  const p = pace(t, c, "2026-05-02");           // day 2: 100 spent yesterday, nothing today
   assert.equal(p.phase, "during");
   assert.equal(p.day, 2);
-  assert.equal(p.expected, 80);
-  assert.equal(p.ahead, 20);
   assert.equal(p.remainingDays, 4);
   assert.equal(p.daily, 25);                    // (200 - 100) / 4
+  assert.equal(p.todaySpent, 0);
+  assert.equal(p.leftToday, 25);
+  assert.equal(p.ahead, 60);                    // 100 spent by end of yesterday vs 40 planned
   assert.deepEqual(pace(t, c, "2026-05-09"), { phase: "after", diff: -100 });
   const open = trip({ end: "" });
   assert.equal(pace(open, calc(state, open), "2026-05-02").phase, "unknown");
+});
+
+test("spending today uses up today's allowance instead of shrinking it", () => {
+  // 40/day plan; 40 spent on day 1 (on plan), 30 spent today (day 2).
+  const t = trip({ exp: [
+    { id: "1", catId: "b", itemId: "b1", amount: 40, cur: "CHF", rate: 1, homeAmount: 40, date: "2026-05-01" },
+    { id: "2", catId: "b", itemId: "b1", amount: 30, cur: "CHF", rate: 1, homeAmount: 30, date: "2026-05-02" },
+  ] });
+  const p = pace(t, calc(state, t), "2026-05-02");
+  assert.equal(p.daily, 40);                    // still 40 for today
+  assert.equal(p.todaySpent, 30);
+  assert.equal(p.leftToday, 10);                // "CHF 10 left today"
+  assert.equal(p.ahead, 0);                     // on pace up to yesterday
+  assert.equal(p.left, 130);
+  assert.ok(Math.abs(p.tomorrow - 130 / 3) < 1e-9);
+});
+
+test("booked spending today doesn't touch the daily allowance", () => {
+  const t = trip({ exp: [{ id: "1", catId: "a", itemId: null, amount: 300, cur: "CHF", rate: 1, homeAmount: 300, date: "2026-05-02" }] });
+  const p = pace(t, calc(state, t), "2026-05-02");
+  assert.equal(p.todaySpent, 0);
+  assert.equal(p.daily, 50);                    // nothing flexible spent yet: 200 over the 4 days left
 });
 
 test("CSV export quotes awkward values and lists oldest first", () => {

@@ -304,18 +304,25 @@ function paceCard(t, c, p) {
     extra = daysBar(p, c.days);
   } else if (p.phase === "during") {
     lbl = "Today · day " + p.day + " of " + p.days;
-    if (p.left < 0) {
-      big = '<span class="over">' + M(-p.left) + "</span><small>over</small>";
+    if (p.left < 0 && p.leftToday <= 0) {
+      big = '<span class="over">' + M(-p.left) + "</span><small>over budget</small>";
       chip = '<span class="chip over">Over budget</span>';
       note = "Flexible spending has gone past its budget for the whole trip.";
     } else {
-      big = M(p.daily) + "<small>/ day left</small>" + (p.remainingDays >= 7 ? '<span class="perweek">≈ ' + M(p.daily * 7) + " a week</span>" : "");
-      chip = Math.abs(p.ahead) < 1 ? '<span class="chip neutral">On pace</span>'
+      const over = p.leftToday < 0;
+      big = over ? '<span class="over">' + M(-p.leftToday) + "</span><small>over today</small>"
+                 : M(p.leftToday) + "<small>left today</small>";
+      chip = over ? '<span class="chip over">Over today</span>'
+        : Math.abs(p.ahead) < 1 ? '<span class="chip neutral">On pace</span>'
         : p.ahead > 0 ? '<span class="chip over">' + M(p.ahead) + " over pace</span>"
         : '<span class="chip pos">' + M(-p.ahead) + " under pace</span>";
-      note = M(p.left) + " of flexible budget left for " + (p.remainingDays > 1 ? "today and the next " + plural(p.remainingDays - 1, "day") : "today") + ".";
+      extra = '<div class="todaybox"><div class="bar" style="--h:var(--pos)"><i class="' + (over ? "over" : "") + '" style="width:' +
+        (p.daily > 0 ? Math.min(100, p.todaySpent / p.daily * 100) : (p.todaySpent > 0 ? 100 : 0)) + '%"></i></div>' +
+        '<div class="todaylbl"><span><b>' + M(p.todaySpent) + "</b> of " + M(p.daily) + " spent today</span></div></div>";
+      note = p.tomorrow == null ? "Last day of the trip." :
+        "From tomorrow: <b>" + M(p.tomorrow) + "</b> a day for the " + plural(p.remainingDays - 1, "day") + " left" +
+        (p.remainingDays - 1 >= 7 ? " (≈ " + M(p.tomorrow * 7) + " a week)" : "") + ".";
     }
-    extra = daysBar(p, c.days);
   } else {
     lbl = "Trip finished";
     big = M(Math.abs(p.diff)) + "<small>" + (p.diff > 0 ? "over" : "under") + "</small>";
@@ -324,7 +331,7 @@ function paceCard(t, c, p) {
     extra = daysBar(p, c.days);
   }
   return '<div class="tint pace"><div class="top"><div class="lbl">' + lbl + "</div>" + chip + "</div>" +
-    '<div class="big">' + big + "</div>" + extra + '<p class="note">' + note + "</p></div>";
+    '<div class="big">' + big + "</div>" + extra + (p.phase === "during" ? daysBar(p, c.days) : "") + '<p class="note">' + note + "</p></div>";
 }
 
 function savingsCard(t, c) {

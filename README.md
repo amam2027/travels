@@ -107,11 +107,18 @@ frankfurter.dev) and shows their date. Offline, it uses the last rates it fetche
 - Every expense keeps the rate it was logged with. Changing a rate later never changes past
   expenses.
 
-### How pace is calculated
+### How the daily allowance works
 
-Only the **flexible** budget counts, because booked costs are already committed. It's spread
-evenly over the trip's days. An expense counts as flexible unless it's in a category whose
-budget is entirely booked (or attached to a booked cost in a split category).
+Only the **flexible** budget counts, because booked costs are already committed. Each morning,
+today's allowance is what's left of the flexible budget before today, divided by the days
+remaining (today included). Spending during the day fills up that allowance — "CHF 30 of
+CHF 40 spent today, CHF 10 left today" — rather than lowering it. Underneath, **From
+tomorrow** shows what each remaining day gets after today's spending, so overspending today
+visibly trims the days ahead. The pace chip compares your spending up to yesterday with the
+plan.
+
+An expense counts as flexible unless it's in a category whose budget is entirely booked (or
+attached to a booked cost in a split category).
 
 ## Making changes (for development)
 

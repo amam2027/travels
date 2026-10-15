@@ -78,6 +78,9 @@ export function calc(s, t) {
 }
 
 // Variable spending against a straight-line plan across the trip's days.
+// Today's allowance is fixed at the start of the day — what's left before today, spread over the
+// days remaining including today — so spending today shows as "spent of today's allowance" instead
+// of quietly shrinking the allowance itself.
 export function pace(t, c, today) {
   if (!c.known) return { phase: "unknown" };
   const start = parseDay(t.start), end = parseDay(t.end), now = parseDay(today);
@@ -87,14 +90,19 @@ export function pace(t, c, today) {
   if (now > end) {
     return { phase: "after", diff: c.variableSpent - c.variable };
   }
-  const day = Math.round((now - start) / DAY) + 1;     // today is day N of the trip
-  const expected = c.variable * day / c.days;          // plan through the end of today
-  const remainingDays = c.days - day + 1;              // today plus the days after it
-  const left = c.variable - c.variableSpent;
+  let todaySpent = 0;
+  for (const e of t.exp) if (e.date === today && isVariableExpense(e, t)) todaySpent += expenseHome(e);
+  const before = c.variableSpent - todaySpent;          // everything not dated today
+  const day = Math.round((now - start) / DAY) + 1;      // today is day N of the trip
+  const remainingDays = c.days - day + 1;               // today plus the days after it
+  const daily = Math.max(0, c.variable - before) / remainingDays;
+  const left = c.variable - c.variableSpent;            // flexible budget left after today's spending too
   return {
-    phase: "during", day, days: c.days, expected,
-    ahead: c.variableSpent - expected,                 // > 0 means spending faster than planned
-    left, remainingDays, daily: Math.max(0, left) / remainingDays,
+    phase: "during", day, days: c.days, remainingDays,
+    daily, todaySpent, leftToday: daily - todaySpent,
+    ahead: before - c.variable * (day - 1) / c.days,    // pace up to yesterday; > 0 means faster than planned
+    left,
+    tomorrow: remainingDays > 1 ? Math.max(0, left) / (remainingDays - 1) : null,
   };
 }
 

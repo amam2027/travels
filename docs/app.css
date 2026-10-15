@@ -133,7 +133,7 @@ button.row:active,label.row:active{background:color-mix(in srgb,var(--ink) 6%,va
 .pace .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .pace .lbl{font-size:14.5px;color:var(--muted);font-weight:500}
 .pace .big{font-size:34px;font-weight:700;letter-spacing:-.032em;margin-top:4px;line-height:1.1}
-.pace .big small{font-size:16px;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:2px}
+.pace .big small{font-size:16px;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:6px}
 .pace .big.over{color:var(--over)}
 .pace .note{font-size:14px;color:var(--muted);margin-top:8px;line-height:1.45}
 .days{display:flex;gap:3px;margin-top:16px}
@@ -523,3 +523,11 @@ button.tint:active,button.plainblock:active{transform:scale(.985)}
 .row .sub .st.owed{color:var(--pos)}
 .row .sub .st.ok{color:var(--muted);display:inline-flex;align-items:center;gap:3px}
 .row .sub .st .i{width:13px;height:13px;stroke-width:2.6}
+
+/* today's allowance */
+.pace .todaybox{margin-top:12px}
+.pace .todaybox .bar{height:8px;margin-top:0;background:color-mix(in srgb,var(--pos) 16%,transparent)}
+.pace .todaylbl{display:flex;justify-content:space-between;font-size:13.5px;color:var(--muted);margin-top:7px}
+.pace .todaylbl b{color:var(--ink);font-weight:650}
+.pace .todaybox + .days{margin-top:14px}
+.pace .note b{color:var(--ink);font-weight:650}

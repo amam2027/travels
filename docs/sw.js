@@ -1,6 +1,6 @@
 // Offline shell: everything the app needs is cached at install, then served cache-first.
 // Bump VERSION whenever any file below changes, so phones pick up the new version.
-const VERSION = "trips-v8";
+const VERSION = "trips-v9";
 const SHELL = [
   "./", "index.html", "app.css", "manifest.webmanifest",
   "js/app.js", "js/calc.js", "js/entry.js", "js/icons.js", "js/rates.js", "js/sheets.js", "js/store.js", "js/util.js",

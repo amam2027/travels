@@ -213,10 +213,10 @@ function viewHome(t, c) {
   }
 
   // balance card
-  const left = c.planned - c.spent, over = left < 0;
+  const planned = c.planned > 0, left = c.planned - c.spent, over = planned && left < 0;
   const segs = c.cats.filter(cc => Math.max(cc.planned, cc.spent) > 0);
-  h += '<section class="hero" aria-label="Budget"><div class="lbl">' + (c.planned > 0 ? (over ? "Over budget by" : "Left to spend") : "Nothing planned yet") + "</div>" +
-    '<div class="big' + (over ? " over" : "") + '"><span class="cur">' + s.home + "</span>" + fmt(Math.abs(left)) + "</div>" +
+  h += '<section class="hero" aria-label="Budget"><div class="lbl">' + (planned ? (over ? "Over budget by" : "Left to spend") : "Spent so far") + "</div>" +
+    '<div class="big' + (over ? " over" : "") + '"><span class="cur">' + s.home + "</span>" + fmt(planned ? Math.abs(left) : c.spent) + "</div>" +
     '<div class="meta">' + (c.planned > 0 ? "<b>" + M(c.spent) + "</b> spent of " + M(c.planned) + " planned" : "Add costs in Budget to see what's left.") + "</div>" +
     (segs.length
       ? '<div class="alloc" role="img" aria-label="Budget by category">' + segs.map(cc => {

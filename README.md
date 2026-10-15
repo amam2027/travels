@@ -29,36 +29,40 @@ After the first open, the app works fully offline: planning, logging expenses, e
 If the phone is lost or reset, the data goes with it, so back up now and then, especially
 before and during a trip:
 
-1. At the bottom of the main screen, tap **Back up all data**.
+1. In **Settings**, tap **Back up all data**.
 2. In the share sheet, choose **Save to Files** and pick **iCloud Drive**.
 
-To restore on a new phone, install the app, tap **Restore a backup** and pick that file.
+To restore on a new phone, install the app, go to **Settings → Restore a backup** and pick that file.
 Restoring replaces everything currently in the app.
 
-Below the buttons, the app shows when you last backed up.
+Settings shows when you last backed up, and Home reminds you if it's been more than two weeks.
 
 ## Using it
 
-- **Plan:** set the destination, dates, travellers and local currency. Add categories, then
-  lines inside them. Each line has an amount, a currency, how it scales (one-off, per person,
-  per day, per night, per person per day) and whether it's **fixed** (booked) or an
-  **estimate**.
-- **Log expense:** the big button at the bottom. Type the amount on the keypad, tap a
-  category, tap **Add**. The currency starts on the trip's local currency, and the last category
-  you used is preselected. You can attach an expense to a specific line or leave it on the whole
-  category.
-- **Spending:** your pace (daily allowance left, and whether you're spending faster or
-  slower than planned), each category's spending, exchange rates and every expense. Tap a
-  category to see its expenses. During a trip, the app opens on this tab.
-- **Export expenses (CSV):** a spreadsheet-friendly file of the current trip's expenses.
+The app has four tabs and a big **+** button in the middle of the tab bar.
+
+- **Home:** what's left to spend, today's allowance and how you're pacing, your categories,
+  and recent expenses. Tap the trip name at the top to switch trips or start a new one.
+- **+ (add expense):** type the amount on the keypad, tap a category, tap **Add**. The
+  currency starts on the trip's local currency (tap it to change), and the last category you
+  used is already selected. You can attach an expense to one planned cost or leave it on the
+  whole category, add a note, or change the date.
+- **Activity:** every expense, grouped by day, filterable by category. Tap an expense to
+  edit it. Swipe left to delete. Every change can be undone from the message at the bottom.
+- **Budget:** trip details, then each category's planned costs. Each cost has an amount, a
+  currency, how it adds up (one-off, per person, per day, per night, per person per day) and
+  whether it's **booked** or an **estimate**. Tap a category to see its expenses.
+- **Settings:** trips, home currency, exchange rates, backup and restore, CSV export.
+
+Swipe a sheet down to close it. The app follows your phone's light or dark mode.
 
 ### Exchange rates
 
 When online, the app fetches the European Central Bank's daily reference rates (from
 frankfurter.dev) and shows their date. Offline, it uses the last rates it fetched and says so.
 
-- Type over any rate to override it. A **live** link appears to switch back.
-- Currencies the ECB doesn't publish (for example MAD or VND) are marked **manual**, and you
+- In **Settings**, tap a currency to override its rate. **Use the live rate** switches back.
+- Currencies the ECB doesn't publish (for example MAD or VND) are marked **Set by you**, and you
   set them yourself. If you log an expense in a currency with no rate, the entry screen asks
   for one.
 - Every expense keeps the rate it was logged with. Changing a rate later never changes past
@@ -75,7 +79,7 @@ to a fixed line, so an expense on a whole category counts as variable.
 No build step. The app is plain HTML, CSS and JavaScript in `docs/`, which GitHub Pages serves.
 
 ```sh
-npm run serve   # http://127.0.0.1:8765
+npm run serve   # http://127.0.0.1:8765 (add ?sw to test offline mode locally)
 npm test        # budget maths tests (node, no dependencies)
 ```
 

@@ -44,7 +44,7 @@ export function icon(name, cls) {
 
 const RULES = [
   [/flight|plane|air/i, "plane"],
-  [/transport|train|bus|taxi|uber|metro|ferry|transit/i, "train"],
+  [/transport|train|bus|taxi|uber|metro|ferry|transit|getting around|local travel/i, "train"],
   [/hotel|accom|stay|airbnb|lodg|hostel|apartment/i, "bed"],
   [/car|rental|gas|fuel|petrol|parking|toll/i, "car"],
   [/food|meal|restaurant|eat|drink|grocer|coffee|bar|dinner|lunch|breakfast/i, "food"],

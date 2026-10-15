@@ -39,20 +39,30 @@ Settings shows when you last backed up, and Home reminds you if it's been more t
 
 ## Using it
 
-The app has four tabs and a big **+** button in the middle of the tab bar.
+**Planning a trip.** Tap **Plan a trip** and answer four questions: where (the local currency
+is filled in for you), when (tap your first and last day on the calendar), who's going, and a
+rough budget for flights, stay, food, getting around, activities and shopping. Leave blank
+anything you don't know.
 
-- **Home:** what's left to spend, today's allowance and how you're pacing, your categories,
-  and recent expenses. Tap the trip name at the top to switch trips or start a new one.
-- **+ (add expense):** type the amount on the keypad, tap a category, tap **Add**. The
-  currency starts on the trip's local currency (tap it to change), and the last category you
-  used is already selected. You can attach an expense to one planned cost or leave it on the
-  whole category, add a note, or change the date.
-- **Activity:** every expense, grouped by day, filterable by category. Tap an expense to
-  edit it. Swipe left to delete. Every change can be undone from the message at the bottom.
-- **Budget:** trip details, then each category's planned costs. Each cost has an amount, a
-  currency, how it adds up (one-off, per person, per day, per night, per person per day) and
-  whether it's **booked** or an **estimate**. Tap a category to see its expenses.
-- **Settings:** trips, home currency, exchange rates, backup and restore, CSV export.
+**The budget.** Each category has one budget: an amount, how it adds up (for the whole trip,
+per day, per night, per person, or per person per day) and whether it's **already booked**.
+Tap a category in **Budget** to change it — the sheet shows what it comes to, e.g.
+"× 7 days × 2 people = CHF 392". Booked costs are committed. Everything else is your
+**flexible** budget, which is what the daily allowance on Home is worked out from. If one
+category needs several costs (a hotel and an Airbnb, say), use **Split into several costs**.
+
+**Logging.** Tap **+**, type the amount, tap a category, tap **Add**. The currency starts on
+the trip's local currency (tap it to change) and your last category is already selected.
+
+**Everything else.**
+
+- **Home:** what's left to spend, today's allowance and pace, categories and recent expenses.
+  Tap the trip name to switch trips or plan another.
+- **Activity:** every expense by day. Tap one to edit it, swipe left to delete. Changes can
+  be undone from the message at the bottom.
+- **Trip details** (tap the line above "Budget", or Settings → Trip details): destination,
+  dates, travellers, local currency, savings, and deleting the trip.
+- **Settings:** home currency, exchange rates, backup and restore, CSV export.
 
 Swipe a sheet down to close it. The app follows your phone's light or dark mode.
 
@@ -70,9 +80,9 @@ frankfurter.dev) and shows their date. Offline, it uses the last rates it fetche
 
 ### How pace is calculated
 
-Only **estimate** lines count, because fixed costs are already committed. The estimate
-total is spread evenly over the trip's days. An expense counts against it unless it's attached
-to a fixed line, so an expense on a whole category counts as variable.
+Only the **flexible** budget counts, because booked costs are already committed. It's spread
+evenly over the trip's days. An expense counts as flexible unless it's in a category whose
+budget is entirely booked (or attached to a booked cost in a split category).
 
 ## Making changes (for development)
 

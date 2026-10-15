@@ -12,6 +12,8 @@ function setInert() {
 // opts: { label, cls, render(body, api), onClose(result) }
 // render gets the sheet element; return value of api.close(x) is passed to onClose.
 export function openSheet(opts) {
+  const t = $("toast");
+  if (t) t.classList.remove("show");
   const wrap = document.createElement("div");
   wrap.className = "sheet-wrap";
   wrap.innerHTML = '<div class="scrim"></div><section class="sheet ' + (opts.cls || "") + '" role="dialog" aria-modal="true" aria-label="' +
@@ -53,6 +55,18 @@ function close(entry, result) {
   setTimeout(done, 500);
   if (entry.opener && entry.opener.focus && document.contains(entry.opener)) entry.opener.focus({ preventScroll: true });
   if (entry.opts.onClose) entry.opts.onClose(result);
+}
+
+// Keep sheets above the on-screen keyboard (iOS overlays it instead of resizing the page).
+if (window.visualViewport) {
+  const vv = window.visualViewport;
+  const update = () => {
+    const kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+    document.documentElement.style.setProperty("--kb", kb + "px");
+    document.documentElement.classList.toggle("kb-open", kb > 80);
+  };
+  vv.addEventListener("resize", update);
+  vv.addEventListener("scroll", update);
 }
 
 export function topSheet() { return stack.length ? stack[stack.length - 1] : null; }

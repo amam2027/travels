@@ -109,7 +109,7 @@ export function openEntry(ctx, existing) {
 
       function drawLines() {
         const c = t.cats.find(x => x.id === catId), row = q(".linerow");
-        if (!c || !c.items.length) { row.innerHTML = ""; return; }
+        if (!c || c.items.length < 2) { row.innerHTML = ""; return; }  // only split categories have costs to pick from
         row.innerHTML = '<button class="linechip" role="radio" aria-checked="' + !itemId + '" data-item="">Whole category</button>' +
           c.items.map(it => '<button class="linechip" role="radio" aria-checked="' + (it.id === itemId) + '" data-item="' + it.id + '">' +
             esc(it.name || "Untitled") + "</button>").join("");

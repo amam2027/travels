@@ -1,9 +1,9 @@
 // Offline shell: everything the app needs is cached at install, then served cache-first.
 // Bump VERSION whenever any file below changes, so phones pick up the new version.
-const VERSION = "trips-v9";
+const VERSION = "trips-v10";
 const SHELL = [
   "./", "index.html", "app.css", "manifest.webmanifest",
-  "js/app.js", "js/calc.js", "js/entry.js", "js/icons.js", "js/rates.js", "js/sheets.js", "js/store.js", "js/util.js",
+  "js/app.js", "js/calc.js", "js/calendar.js", "js/entry.js", "js/newtrip.js", "js/places.js", "js/icons.js", "js/rates.js", "js/sheets.js", "js/store.js", "js/util.js",
   "fonts/instrument-sans-latin.woff2", "fonts/instrument-sans-latin-ext.woff2",
   "icons/icon.svg", "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png",
 ];

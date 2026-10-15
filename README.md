@@ -60,7 +60,9 @@ the trip's local currency (tap it to change) and your last category is already s
 towards your budget and daily allowance. **Activity** shows the running balance — what
 friends owe you for things you paid, minus what you owe for things they paid — and a
 **Shared** filter. Any expense, including an imported bank payment, can be split later by
-tapping it.
+tapping it. Once you've paid a friend back (or they've paid you), open the expense and turn on
+**I've paid my share back** / **They've paid me back** — it drops out of the balance but still
+counts as your spending. In the Shared filter, **Mark all as settled** settles up in one go.
 
 **Everything else.**
 

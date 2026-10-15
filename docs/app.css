@@ -514,3 +514,12 @@ button.tint:active,button.plainblock:active{transform:scale(.985)}
 .shared .lbl{font-size:14.5px;color:var(--muted);font-weight:500}
 .shared .note{font-size:14px;color:var(--muted);margin-top:6px;line-height:1.45}
 .sheet .switchrow + .preview{margin:16px 0 20px}
+
+/* settling up */
+.settlerow{margin-top:10px;padding-top:12px}
+.settlerow[hidden]{display:none}
+.row .sub .st{font-weight:600}
+.row .sub .st.owe{color:var(--over)}
+.row .sub .st.owed{color:var(--pos)}
+.row .sub .st.ok{color:var(--muted);display:inline-flex;align-items:center;gap:3px}
+.row .sub .st .i{width:13px;height:13px;stroke-width:2.6}

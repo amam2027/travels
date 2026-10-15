@@ -198,10 +198,13 @@ function expRow(e, t, withDay, inCat) {
   const title = e.note || (it ? it.name || "Untitled" : c ? c.name || "Untitled" : "Uncategorised");
   const titledByCat = !e.note && !it;   // the title already is the category name
   const sub = [withDay ? fmtDay(e.date, today()) : null, !inCat && c && !titledByCat ? c.name : null, e.note && it ? it.name : null].filter(Boolean).join(" · ");
+  const status = e.split > 1 ? (e.settled ? '<span class="st ok">' + icon("check") + "settled</span>"
+    : e.paidBy === "other" ? '<span class="st owe">you owe ' + M2(expenseHome(e)) + "</span>"
+    : '<span class="st owed">owed to you ' + M2(expenseHome(e) * (e.split - 1)) + "</span>") : "";
   return '<div class="swipe"><button class="del" data-act="delExp" data-id="' + e.id + '" tabindex="-1">Delete</button>' +
     '<button class="row" data-act="exp" data-id="' + e.id + '">' +
       '<span class="ic" style="--h:' + hue(t, e.catId) + '">' + catIcon(c ? c.name : "") + "</span>" +
-      '<span class="main"><span class="ttl">' + esc(title) + "</span>" + (sub ? '<span class="sub">' + esc(sub) + "</span>" : "") + "</span>" +
+      '<span class="main"><span class="ttl">' + esc(title) + "</span>" + (sub || status ? '<span class="sub">' + esc(sub) + (sub && status ? " · " : "") + status + "</span>" : "") + "</span>" +
       '<span class="end"><span class="amt">' + M2(expenseHome(e)) + "</span>" +
         (e.split > 1 ? '<span class="amt2">÷' + e.split + " of " + money2(e.amount, e.cur) + "</span>"
           : e.cur !== s.home ? '<span class="amt2">' + money2(e.amount, e.cur) + "</span>" : "") + "</span>" +
@@ -361,6 +364,9 @@ function viewActivity(t, c) {
     c.cats.filter(cc => cc.spent > 0).map(cc => '<button class="fchip" style="--h:' + cc.color + '" data-act="filter" data-id="' + cc.id + '" aria-pressed="' +
       (filter === cc.id) + '"><span class="dot"></span>' + esc(cc.name || "Untitled") + "</button>").join("") + "</div>";
   const list = sortedExp(t.exp.filter(e => !filter || (filter === "shared" ? e.split > 1 : e.catId === filter)));
+  if (filter === "shared" && t.exp.some(e => e.split > 1 && !e.settled)) {
+    h += '<div class="list"><button class="row center" data-act="settleAll"><span class="ttl">' + icon("check") + "Mark all as settled</span></button></div>";
+  }
   const days = [];
   for (const e of list) {
     const last = days[days.length - 1];
@@ -574,6 +580,17 @@ const actions = {
     if (e) openEntry(entryCtx(), e);
   },
   delExp: d => removeExpense(d.id),
+  settleAll: async () => {
+    const t = trip(), open = t.exp.filter(e => e.split > 1 && !e.settled);
+    const b = sharedBalance(t);
+    const ok = await confirmSheet({ title: "Mark all as settled?", confirm: "Mark settled", destructive: false,
+      message: plural(open.length, "shared expense") + (b.owe > 0 ? " · you've paid back " + M2(b.owe) : "") + (b.owed > 0 ? " · you've been paid " + M2(b.owed) : "") + "." });
+    if (!ok) return;
+    open.forEach(e => { e.settled = true; });
+    undoData = { type: "settle", tripId: t.id, ids: open.map(e => e.id) };
+    persist(true); render();
+    toast("All settled", true);
+  },
   trips: openTrips,
   newTrip: startNewTrip,
   editTrip: openTripSheet,
@@ -614,6 +631,7 @@ $("undo").addEventListener("click", () => {
   else if (undoData.type === "item") undoData.cat.items.splice(undoData.index, 0, undoData.item);
   else if (undoData.type === "add") t.exp = t.exp.filter(x => x.id !== undoData.item.id);
   else if (undoData.type === "bulk") t.exp = t.exp.filter(x => !undoData.ids.includes(x.id));
+  else if (undoData.type === "settle") t.exp.forEach(x => { if (undoData.ids.includes(x.id)) x.settled = false; });
   else if (undoData.type === "edit") { const i = t.exp.findIndex(x => x.id === undoData.item.id); if (i >= 0) t.exp[i] = undoData.item; }
   else if (undoData.type === "trip") {
     s.trips = s.trips.filter(x => !pristine(x));
@@ -638,8 +656,9 @@ function entryCtx() {
       } else {
         const i = t.exp.findIndex(x => x.id === exp.id);
         undoData = { type: "edit", tripId: t.id, item: t.exp[i] };
+        const nowSettled = exp.settled && !t.exp[i].settled;
         t.exp[i] = exp;
-        toast("Expense updated", true);
+        toast(nowSettled ? "Marked as paid back" : "Expense updated", true);
       }
       s.lastCat[t.id] = exp.catId;
       persist(true); render();

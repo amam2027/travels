@@ -17,6 +17,7 @@ export function openEntry(ctx, existing) {
   let date = editing ? existing.date : localDate();
   let split = editing ? Math.max(1, Number(existing.split) || 1) : 1;      // people sharing the cost, you included
   let paidBy = editing && existing.paidBy === "other" ? "other" : "me";
+  let settled = editing ? !!existing.settled : false;
   if (!editing) {
     ctx.ensureCurrency(cur);
     const last = s.lastCat[t.id];
@@ -40,6 +41,8 @@ export function openEntry(ctx, existing) {
           '<div class="hscroll linerow" role="radiogroup" aria-label="Line"></div>' +
           '<div class="toolrow"><label class="noterow">' + icon("note") + '<input type="text" placeholder="Add a note" aria-label="Note" autocomplete="off" enterkeyhint="done"></label>' +
           '<button class="splitbtn" data-split>' + icon("users") + "<span></span></button></div>" +
+          '<div class="switchrow settlerow" hidden><div><div class="ttl" data-st></div><div class="sub" data-ss></div></div>' +
+            '<button class="switch" role="switch" data-settled><i></i></button></div>' +
         "</div>" +
         '<div class="entry-foot">' +
           '<div class="keypad">' + ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "del"].map(k =>
@@ -73,9 +76,24 @@ export function openEntry(ctx, existing) {
         big.style.fontSize = txt.length > 10 ? "40px" : txt.length > 7 ? "50px" : "";
         drawConv();
         drawSave();
+        drawSettle();
+      }
+
+      function drawSettle() {
+        const row = q(".settlerow"), sw = q("[data-settled]");
+        row.hidden = split < 2;
+        if (split < 2) return;
+        const share = value() / split;
+        q("[data-st]").textContent = paidBy === "other" ? "I've paid my share back" : "They've paid me back";
+        q("[data-ss]").textContent = paidBy === "other"
+          ? (settled ? "Settled — no longer counted as owed" : "You owe " + money2(share, cur) + " until you turn this on")
+          : (settled ? "Settled — no longer counted as owed to you" : "Friends owe you " + money2(value() - share, cur));
+        sw.setAttribute("aria-checked", settled);
+        sw.setAttribute("aria-label", q("[data-st]").textContent);
       }
 
       function drawSplit() {
+        drawSettle();
         const b = q("[data-split]");
         b.classList.toggle("on", split > 1);
         b.querySelector("span").textContent = split > 1 ? "÷" + split : "Split";
@@ -148,7 +166,7 @@ export function openEntry(ctx, existing) {
         const r = rateNow(), a = value();
         const exp = {
           ...(editing ? existing : { id: uid(), at: new Date().toISOString() }),
-          catId, itemId: itemId || null, amount: a, cur, rate: r, homeAmount: a * r / split, split, paidBy,
+          catId, itemId: itemId || null, amount: a, cur, rate: r, homeAmount: a * r / split, split, paidBy, settled: split > 1 && settled,
           home: editing && cur === existing.cur ? existing.home : s.home,
           date: dateInput.value || localDate(), note: note.value.trim(),
         };
@@ -156,6 +174,7 @@ export function openEntry(ctx, existing) {
         ctx.save(exp, !editing);
       }
 
+      q("[data-settled]").addEventListener("click", () => { settled = !settled; drawSettle(); });
       q("[data-split]").addEventListener("click", async () => {
         const res = await openSplit({ total: value(), cur, split, paidBy });
         if (res) { split = res.split; paidBy = res.paidBy; q(".conv").innerHTML = ""; drawSplit(); drawConv(); }

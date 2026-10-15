@@ -108,9 +108,9 @@ test("CSV export quotes awkward values and lists oldest first", () => {
     { id: "1", catId: "b", itemId: "b1", amount: 10, cur: "EUR", rate: 0.95, homeAmount: 9.5, date: "2026-05-02", note: 'pizza, "best"' },
   ] });
   const lines = expensesCSV(state, t).trim().split("\r\n");
-  assert.equal(lines[0], "date,category,line,note,amount,currency,rate,split_between,paid_by,my_share_home,home_currency");
-  assert.equal(lines[1], '2026-05-02,Food,Meals,"pizza, ""best""",10,EUR,0.95,1,me,9.5,CHF');
-  assert.equal(lines[2], "2026-05-03,Food,,,5,CHF,1,1,me,5,CHF");
+  assert.equal(lines[0], "date,category,line,note,amount,currency,rate,split_between,paid_by,settled,my_share_home,home_currency");
+  assert.equal(lines[1], '2026-05-02,Food,Meals,"pizza, ""best""",10,EUR,0.95,1,me,,9.5,CHF');
+  assert.equal(lines[2], "2026-05-03,Food,,,5,CHF,1,1,me,,5,CHF");
 });
 
 test("a whole-category expense counts as booked when the category's budget is all booked", () => {
@@ -132,6 +132,16 @@ test("a split expense counts only your share, and the shared balance nets out", 
   assert.equal(calc(state, t).spent, 97.5);
   assert.deepEqual(sharedBalance(t), { owed: 187.5, owe: 25, net: 162.5 });
   const csv = expensesCSV(state, t).trim().split("\r\n");
-  assert.ok(csv.some(l => l.endsWith(",250,CHF,1,4,me,62.5,CHF")));
-  assert.ok(csv.some(l => l.endsWith(",100,CHF,1,4,someone else,25,CHF")));
+  assert.ok(csv.some(l => l.endsWith(",250,CHF,1,4,me,no,62.5,CHF")));
+  assert.ok(csv.some(l => l.endsWith(",100,CHF,1,4,someone else,no,25,CHF")));
+});
+
+test("settled shared costs drop out of the balance but still count as spending", () => {
+  const t = trip({ exp: [
+    { id: "1", catId: "a", itemId: null, amount: 250, cur: "CHF", rate: 1, homeAmount: 62.5, split: 4, paidBy: "me" },
+    { id: "2", catId: "b", itemId: null, amount: 100, cur: "CHF", rate: 1, homeAmount: 25, split: 4, paidBy: "other", settled: true },
+  ] });
+  assert.deepEqual(sharedBalance(t), { owed: 187.5, owe: 0, net: 187.5 });
+  assert.equal(calc(state, t).spent, 87.5);
+  assert.ok(expensesCSV(state, t).includes(",4,someone else,yes,25,CHF"));
 });

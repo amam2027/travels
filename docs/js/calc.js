@@ -103,7 +103,7 @@ export function sharedBalance(t) {
   let owed = 0, owe = 0;
   for (const e of t.exp) {
     const n = Math.max(1, Number(e.split) || 1);
-    if (n < 2) continue;
+    if (n < 2 || e.settled) continue;               // paid back: no longer owed either way
     const share = expenseHome(e);
     if (e.paidBy === "other") owe += share;
     else owed += share * (n - 1);
@@ -117,13 +117,13 @@ export function csvCell(v) {
 }
 
 export function expensesCSV(s, t) {
-  const rows = [["date", "category", "line", "note", "amount", "currency", "rate", "split_between", "paid_by", "my_share_home", "home_currency"]];
+  const rows = [["date", "category", "line", "note", "amount", "currency", "rate", "split_between", "paid_by", "settled", "my_share_home", "home_currency"]];
   const sorted = t.exp.slice().sort((a, b) => (a.date + (a.at || "")).localeCompare(b.date + (b.at || "")));
   for (const e of sorted) {
     const c = t.cats.find(x => x.id === e.catId);
     const it = c && e.itemId ? c.items.find(x => x.id === e.itemId) : null;
     rows.push([e.date, c ? c.name : "", it ? it.name : "", e.note || "", e.amount, e.cur, e.rate,
-      Math.max(1, Number(e.split) || 1), e.paidBy === "other" ? "someone else" : "me",
+      Math.max(1, Number(e.split) || 1), e.paidBy === "other" ? "someone else" : "me", (Number(e.split) || 1) > 1 ? (e.settled ? "yes" : "no") : "",
       Math.round(expenseHome(e) * 100) / 100, e.home || s.home]);
   }
   return rows.map(r => r.map(csvCell).join(",")).join("\r\n") + "\r\n";

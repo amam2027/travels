@@ -105,3 +105,11 @@ test("CSV export quotes awkward values and lists oldest first", () => {
   assert.equal(lines[1], '2026-05-02,Food,Meals,"pizza, ""best""",10,EUR,0.95,9.5,CHF');
   assert.equal(lines[2], "2026-05-03,Food,,,5,CHF,1,5,CHF");
 });
+
+test("a whole-category expense counts as booked when the category's budget is all booked", () => {
+  const t = trip();
+  assert.equal(isVariableExpense({ catId: "a", itemId: null }, t), false);   // Hotel: booked
+  assert.equal(isVariableExpense({ catId: "b", itemId: null }, t), true);    // Food: estimate
+  const empty = trip({ cats: [{ id: "z", name: "Misc", items: [] }] });
+  assert.equal(isVariableExpense({ catId: "z", itemId: null }, empty), true);
+});

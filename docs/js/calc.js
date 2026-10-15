@@ -39,9 +39,13 @@ export function expenseHome(e) {
   return (Number(e.amount) || 0) * (Number(e.rate) || 0);
 }
 
-// An expense counts against the variable budget unless it is attached to a fixed line.
+// An expense counts against the variable budget unless it is attached to a fixed line,
+// or logged to a category whose budget is entirely booked.
 export function isVariableExpense(e, t) {
-  if (!e.itemId) return true;
+  if (!e.itemId) {
+    const c = t.cats.find(x => x.id === e.catId);
+    return !(c && c.items.length && c.items.every(i => i.type === "fixed"));
+  }
   for (const c of t.cats) {
     const it = c.items.find(x => x.id === e.itemId);
     if (it) return it.type === "variable";

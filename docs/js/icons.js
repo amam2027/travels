@@ -53,6 +53,11 @@ const RULES = [
   [/other|misc|extra/i, "dots"],
 ];
 
+export function kindOf(name) {
+  for (const [re, ic] of RULES) if (re.test(name || "")) return ic;
+  return null;
+}
+
 // Icon for a category or line name, falling back to its first letter.
 export function catIcon(name) {
   for (const [re, ic] of RULES) if (re.test(name || "")) return icon(ic);

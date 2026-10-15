@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trips</title>
+<meta name="description" content="Plan a trip budget and log what you spend, offline.">
+<meta name="theme-color" content="#E9EBE8">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Trips">
+<link rel="preload" href="fonts/instrument-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="app.css">
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="vh">Trips</h1>
+  <nav class="trips" id="trips" aria-label="Trips"></nav>
+
+  <div class="hero">
+    <div>
+      <div class="big" id="big">—</div>
+      <div class="cap" id="bigCap">left of the budget</div>
+    </div>
+    <div class="stat"><span class="v" id="sPlanned">—</span><span class="l">planned total</span></div>
+    <div class="stat"><span class="v" id="sSpent">—</span><span class="l">spent so far</span></div>
+    <div class="stat"><span class="v" id="sPer">—</span><span class="l">per person</span></div>
+  </div>
+
+  <div class="grid">
+    <div class="side">
+      <div>
+        <div class="stack" id="stack"></div>
+        <div class="stackcap" id="stackCap">Planned by category — the lighter fill is what you've spent</div>
+      </div>
+      <div class="box">
+        <h2 id="saveTitle">To be ready in time</h2>
+        <div class="n" id="perMonth">—</div>
+        <div class="sub" id="monthSub">Add a start date to see this</div>
+        <div class="inline">
+          <label for="saved">Already saved</label>
+          <input type="number" id="saved" min="0" step="50" inputmode="decimal" placeholder="0">
+        </div>
+      </div>
+      <div class="box">
+        <h2>Fixed vs variable</h2>
+        <div class="sub" id="fvSub" style="margin-top:6px">—</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="setup">
+          <div class="field wide"><label for="dest">Destination</label><input type="text" id="dest" placeholder="Where to?" autocomplete="off"></div>
+          <div class="field"><label for="start">From</label><input type="date" id="start"><div class="len" id="lenA"></div></div>
+          <div class="field"><label for="end">To</label><input type="date" id="end"><div class="len" id="lenB"></div></div>
+          <div class="field"><label for="people">Travellers</label><input type="number" id="people" min="1" step="1" inputmode="numeric"></div>
+          <div class="field"><label for="tcur">Local currency</label><select id="tcur"></select></div>
+        </div>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="View">
+        <button id="tPlan" role="tab" aria-selected="true" aria-controls="planView">Plan</button>
+        <button id="tSpend" role="tab" aria-selected="false" aria-controls="spendView">Spending</button>
+      </div>
+
+      <div id="planView" role="tabpanel" aria-labelledby="tPlan">
+        <div id="cats"></div>
+        <div class="actions" style="margin-top:0">
+          <button class="ghost" id="addCat">Add category</button>
+          <button class="ghost" id="seedCats">Add the usual categories</button>
+        </div>
+      </div>
+
+      <div id="spendView" class="hide" role="tabpanel" aria-labelledby="tSpend">
+        <div class="box pace" id="paceBox">
+          <h2 id="paceTitle">Pace</h2>
+          <div class="n" id="paceN">—</div>
+          <div class="sub" id="paceSub"></div>
+        </div>
+
+        <div class="panel">
+          <div class="bar"><span class="t">By category<small>Tap one to see its expenses</small></span></div>
+          <div id="catList"></div>
+        </div>
+
+        <div class="panel">
+          <div class="bar"><span class="t">Exchange rates<small>1 unit = how many <span class="homeName">CHF</span>. Expenses keep the rate they were logged at.</small></span>
+            <select class="addcur" id="addRate" aria-label="Add currency"></select></div>
+          <div class="rates" id="rates"></div>
+          <div class="ratestat" id="rateStat" role="status"></div>
+        </div>
+
+        <div class="panel">
+          <div class="bar"><span class="t">Spent so far</span><span class="t" id="expTotal"></span></div>
+          <div id="expList"></div>
+        </div>
+        <div class="actions" style="margin-top:0">
+          <button class="ghost" id="csv">Export expenses (CSV)</button>
+        </div>
+      </div>
+
+      <p class="note" id="note"></p>
+      <div class="actions">
+        <button class="ghost" id="newTrip">New trip</button>
+        <button class="ghost" id="dupTrip">Duplicate</button>
+        <select class="ghost" id="home" aria-label="Home currency"></select>
+        <button class="ghost" id="delTrip">Delete trip</button>
+      </div>
+      <div class="actions">
+        <button class="ghost" id="backup">Back up all data</button>
+        <button class="ghost" id="restore">Restore a backup</button>
+        <input type="file" id="restoreFile" accept="application/json,.json" class="vh" tabindex="-1" aria-hidden="true">
+      </div>
+      <p class="backup" id="backupNote"></p>
+    </div>
+  </div>
+</div>
+
+<button class="log" id="logBtn">Log expense</button>
+
+<dialog class="sheet" id="entry" aria-labelledby="entryTitle">
+  <div class="sheet-in">
+    <div class="sheet-head">
+      <h2 id="entryTitle">Log expense</h2>
+      <input type="date" class="endate" id="enDate" aria-label="Date">
+      <button class="x" id="enClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body">
+      <div class="amount" id="enAmount" tabindex="-1" aria-live="polite" aria-label="Amount"><span class="c" id="enCur"></span><span class="n" id="enAmt">0</span></div>
+      <div class="enconv" id="enConv"></div>
+      <div class="curs" id="enCurs" role="radiogroup" aria-label="Currency"></div>
+      <div class="tiles" id="enCats" role="radiogroup" aria-label="Category"></div>
+      <div class="lines" id="enLines" role="radiogroup" aria-label="Line"></div>
+      <input type="text" class="ennote" id="enNote" placeholder="Note (optional)" aria-label="Note" autocomplete="off" enterkeyhint="done">
+    </div>
+    <div class="keypad" id="enPad">
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+      <button data-k="." aria-label="Decimal point">.</button><button data-k="0">0</button><button data-k="del" aria-label="Delete last digit">&larr;</button>
+    </div>
+    <button class="ensave" id="enSave" disabled>Add</button>
+  </div>
+</dialog>
+
+<dialog class="sheet" id="detail" aria-labelledby="dTitle">
+  <div class="sheet-in">
+    <div class="sheet-head">
+      <span class="dot" id="dDot"></span>
+      <h2 id="dTitle"></h2>
+      <button class="x" id="dClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body">
+      <div class="dsum"><div class="n" id="dN"></div><div class="sub" id="dSub"></div><div class="prog"><i id="dProg"></i></div></div>
+      <div class="panel"><div class="bar"><span class="t">Lines</span></div><div id="dLines"></div></div>
+      <div class="panel"><div class="bar"><span class="t">Expenses</span><span class="t" id="dTotal"></span></div><div id="dList"></div></div>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status"><span id="toastMsg"></span><button id="undo">Undo</button></div>
+</body>
+</html>

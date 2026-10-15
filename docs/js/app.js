@@ -312,16 +312,18 @@ function paceCard(t, c, p) {
       const over = p.leftToday < 0;
       big = over ? '<span class="over">' + M(-p.leftToday) + "</span><small>over today</small>"
                  : M(p.leftToday) + "<small>left today</small>";
-      chip = over ? '<span class="chip over">Over today</span>'
-        : Math.abs(p.ahead) < 1 ? '<span class="chip neutral">On pace</span>'
-        : p.ahead > 0 ? '<span class="chip over">' + M(p.ahead) + " over pace</span>"
-        : '<span class="chip pos">' + M(-p.ahead) + " under pace</span>";
+      chip = over ? '<span class="chip over">Over today</span>' : "";
       extra = '<div class="todaybox"><div class="bar" style="--h:var(--pos)"><i class="' + (over ? "over" : "") + '" style="width:' +
         (p.daily > 0 ? Math.min(100, p.todaySpent / p.daily * 100) : (p.todaySpent > 0 ? 100 : 0)) + '%"></i></div>' +
         '<div class="todaylbl"><span><b>' + M(p.todaySpent) + "</b> of " + M(p.daily) + " spent today</span></div></div>";
-      note = p.tomorrow == null ? "Last day of the trip." :
-        "From tomorrow: <b>" + M(p.tomorrow) + "</b> a day for the " + plural(p.remainingDays - 1, "day") + " left" +
-        (p.remainingDays - 1 >= 7 ? " (≈ " + M(p.tomorrow * 7) + " a week)" : "") + ".";
+      // Why today's number differs from the plan: earlier days' savings or overspending, spread over the days left.
+      const sofar = p.day === 1 ? "" : Math.abs(p.ahead) < 1 ? "You were right on plan before today."
+        : "You spent " + M(Math.abs(p.ahead)) + (p.ahead < 0 ? " less" : " more") + " than planned before today, so today's allowance is " +
+          M(p.daily) + " instead of the planned " + M(p.plan) + ".";
+      // Only worth saying when today's spending changes the days ahead, i.e. when it went over.
+      const ahead = !over ? "" : p.tomorrow == null ? "It's the last day of the trip."
+        : "Going over today trims the next " + plural(p.remainingDays - 1, "day") + " to <b>" + M(p.tomorrow) + "</b> a day.";
+      note = [sofar, ahead].filter(Boolean).join(" ") || "Whatever you don't spend today rolls over to the days after.";
     }
   } else {
     lbl = "Trip finished";

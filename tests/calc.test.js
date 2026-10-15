@@ -116,6 +116,16 @@ test("spending today uses up today's allowance instead of shrinking it", () => {
   assert.equal(p.ahead, 0);                     // on pace up to yesterday
   assert.equal(p.left, 130);
   assert.ok(Math.abs(p.tomorrow - 130 / 3) < 1e-9);
+  assert.equal(p.plan, 40);
+});
+
+test("today's allowance moves away from the plan by exactly what earlier days saved or overspent", () => {
+  // Plan 40/day. Day 3, 60 spent on days 1–2 (20 less than the 80 planned).
+  const t = trip({ exp: [{ id: "1", catId: "b", itemId: "b1", amount: 60, cur: "CHF", rate: 1, homeAmount: 60, date: "2026-05-01" }] });
+  const p = pace(t, calc(state, t), "2026-05-03");
+  assert.equal(p.ahead, -20);
+  assert.equal(p.daily, 140 / 3);                // 46.67: the 20 saved spread over the 3 days left
+  assert.ok(Math.abs(p.daily - (p.plan - p.ahead / p.remainingDays)) < 1e-9);
 });
 
 test("booked spending today doesn't touch the daily allowance", () => {

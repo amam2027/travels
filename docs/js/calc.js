@@ -99,6 +99,7 @@ export function pace(t, c, today) {
   const left = c.variable - c.variableSpent;            // flexible budget left after today's spending too
   return {
     phase: "during", day, days: c.days, remainingDays,
+    plan: c.variable / c.days,                          // the original even split per day
     daily, todaySpent, leftToday: daily - todaySpent,
     ahead: before - c.variable * (day - 1) / c.days,    // pace up to yesterday; > 0 means faster than planned
     left,

@@ -112,10 +112,11 @@ frankfurter.dev) and shows their date. Offline, it uses the last rates it fetche
 Only the **flexible** budget counts, because booked costs are already committed. Each morning,
 today's allowance is what's left of the flexible budget before today, divided by the days
 remaining (today included). Spending during the day fills up that allowance — "CHF 30 of
-CHF 40 spent today, CHF 10 left today" — rather than lowering it. Underneath, **From
-tomorrow** shows what each remaining day gets after today's spending, so overspending today
-visibly trims the days ahead. The pace chip compares your spending up to yesterday with the
-plan.
+CHF 40 spent today, CHF 10 left today" — rather than lowering it. Overspending today
+visibly trims the days ahead. If earlier days went under or over plan, the card says so in
+plain words — e.g. "You spent CHF 20 less than planned before today, so today's allowance is
+CHF 44 instead of the planned CHF 40." Going over today's allowance shows how much that trims
+from the days left.
 
 An expense counts as flexible unless it's in a category whose budget is entirely booked (or
 attached to a booked cost in a split category).

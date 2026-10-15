@@ -2,14 +2,14 @@
 // lands completely or not at all, even if the app is killed halfway.
 
 const DB = "travels", STORE = "kv";
-let dbp = null;
+let dbp = null, opened = null;
 
 function db() {
   if (!dbp) {
     dbp = new Promise((resolve, reject) => {
       const r = indexedDB.open(DB, 1);
       r.onupgradeneeded = () => r.result.createObjectStore(STORE);
-      r.onsuccess = () => resolve(r.result);
+      r.onsuccess = () => { opened = r.result; resolve(r.result); };
       r.onerror = () => reject(r.error);
     });
   }
@@ -25,13 +25,16 @@ export async function get(key) {
   });
 }
 
-export async function set(key, value) {
-  const d = await db();
+// Once the database is open, the write starts synchronously and is committed right away,
+// which keeps the window in which closing the app could drop it as small as possible.
+export function set(key, value) {
+  if (!opened) return db().then(d => { opened = d; return set(key, value); });
   return new Promise((resolve, reject) => {
-    const tx = d.transaction(STORE, "readwrite");
+    const tx = opened.transaction(STORE, "readwrite", { durability: "strict" });
     tx.objectStore(STORE).put(value, key);
     tx.oncomplete = () => resolve();
     tx.onerror = tx.onabort = () => reject(tx.error);
+    if (tx.commit) tx.commit();
   });
 }
 

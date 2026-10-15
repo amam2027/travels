@@ -1,7 +1,7 @@
 // Pure budget maths. No DOM, no storage, so it can be tested under node.
 
 export const HUES = ["#4F6F8F", "#8C6A4F", "#4F7F7A", "#7E6B8F", "#A08948", "#93656A", "#5F7355", "#5C6E8C", "#7A7168", "#6B7F9E"];
-export const BASIS = [["once", "one-off"], ["person", "per person"], ["day", "per day"], ["night", "per night"], ["personday", "per person/day"]];
+export const BASIS = [["once", "one-off"], ["person", "per person"], ["day", "per day"], ["week", "per week"], ["night", "per night"], ["personday", "per person/day"]];
 
 const DAY = 86400000;
 
@@ -28,6 +28,7 @@ export function itemPlanned(it, rate, days, nights, people) {
   const b = (Number(it.amount) || 0) * rate;
   if (it.basis === "person") return b * people;
   if (it.basis === "day") return b * days;
+  if (it.basis === "week") return b * days / 7;       // pro-rated for trips that aren't whole weeks
   if (it.basis === "night") return b * nights;
   if (it.basis === "personday") return b * days * people;
   return b;

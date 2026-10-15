@@ -11,7 +11,7 @@ import { importFile } from "./importer.js";
 
 const KEY = "state";
 const CURS = allCurrencies();
-const BASIS = [["once", "Whole trip", "for the whole trip"], ["day", "Per day", "per day"], ["night", "Per night", "per night"],
+const BASIS = [["once", "Whole trip", "for the whole trip"], ["day", "Per day", "per day"], ["week", "Per week", "per week"], ["night", "Per night", "per night"],
                ["person", "Per person", "per person"], ["personday", "Per person, per day", "per person, per day"]];
 const TABS = { home: "Home", activity: "Activity", budget: "Budget", settings: "Settings" };
 const RATE_MAX_AGE = 6 * 3600 * 1000;
@@ -187,7 +187,9 @@ function budgetText(cat) {
 }
 function multiplier(basis, c) {
   const p = plural(c.people, "person").replace("persons", "people");
-  return { once: "", person: "× " + p, day: "× " + plural(c.days, "day"), night: "× " + plural(c.nights, "night"),
+  const weeks = Math.round(c.days / 7 * 10) / 10;
+  return { once: "", person: "× " + p, day: "× " + plural(c.days, "day"), week: "× " + (weeks === 1 ? "1 week" : weeks + " weeks"),
+    night: "× " + plural(c.nights, "night"),
     personday: "× " + plural(c.days, "day") + " × " + p }[basis] || "";
 }
 function expRow(e, t, withDay, inCat) {
@@ -294,7 +296,7 @@ function paceCard(t, c, p) {
     lbl = "Daily allowance";
     chip = '<span class="chip neutral">' + (p.daysToGo === 1 ? "Starts tomorrow" : "Starts in " + plural(p.daysToGo, "day")) + "</span>";
     big = M(p.daily) + "<small>/ day</small>";
-    note = "What you can spend each day from your flexible budget once you leave.";
+    note = "What you can spend each day from your flexible budget once you leave" + (c.days >= 7 ? " — about " + M(p.daily * 7) + " a week." : ".");
     extra = daysBar(p, c.days);
   } else if (p.phase === "during") {
     lbl = "Today · day " + p.day + " of " + p.days;
@@ -303,7 +305,7 @@ function paceCard(t, c, p) {
       chip = '<span class="chip over">Over budget</span>';
       note = "Flexible spending has gone past its budget for the whole trip.";
     } else {
-      big = M(p.daily) + "<small>/ day left</small>";
+      big = M(p.daily) + "<small>/ day left</small>" + (p.remainingDays >= 7 ? '<span class="perweek">≈ ' + M(p.daily * 7) + " a week</span>" : "");
       chip = Math.abs(p.ahead) < 1 ? '<span class="chip neutral">On pace</span>'
         : p.ahead > 0 ? '<span class="chip over">' + M(p.ahead) + " over pace</span>"
         : '<span class="chip pos">' + M(-p.ahead) + " under pace</span>";
@@ -895,7 +897,7 @@ function openBudget(catId) {
         el.querySelectorAll("[data-basis]").forEach(b => b.setAttribute("aria-checked", b.dataset.basis === d.basis));
         q("[data-booked]").setAttribute("aria-checked", d.type === "fixed");
         const c = calc(s, t);
-        const needsDates = ["day", "night", "personday"].includes(d.basis) && !c.known;
+        const needsDates = ["day", "week", "night", "personday"].includes(d.basis) && !c.known;
         const total = itemPlanned({ amount: value(), basis: d.basis }, rate(d.cur), c.days, c.nights, c.people);
         const mult = multiplier(d.basis, c);
         q("[data-prev]").textContent = !value() ? basisLabel(d.basis).replace(/^./, x => x.toUpperCase()) :

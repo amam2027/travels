@@ -45,7 +45,7 @@ is filled in for you), when (tap your first and last day on the calendar), who's
 rough budget for flights, stay, food, getting around, activities and shopping. Leave blank
 anything you don't know.
 
-**The budget.** Each category has one budget: an amount, how it adds up (for the whole trip,
+**The budget.** Each category has one budget: an amount, how it adds up (for the whole trip, per week,
 per day, per night, per person, or per person per day) and whether it's **already booked**.
 Tap a category in **Budget** to change it — the sheet shows what it comes to, e.g.
 "× 7 days × 2 people = CHF 392". Booked costs are committed. Everything else is your

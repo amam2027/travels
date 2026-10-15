@@ -36,6 +36,13 @@ test("planned cost scales by basis", () => {
   assert.equal(itemPlanned(it("personday"), 2, 5, 4, 3), 300);
 });
 
+test("a weekly budget is pro-rated over the trip's days", () => {
+  const wk = { amount: 100, basis: "week" };
+  assert.equal(itemPlanned(wk, 1, 7, 6, 2), 100);
+  assert.equal(itemPlanned(wk, 1, 14, 13, 2), 200);
+  assert.ok(Math.abs(itemPlanned(wk, 1, 10, 9, 2) - 142.857) < 0.001);
+});
+
 test("home currency always has rate 1", () => {
   assert.equal(rateOf(state, "CHF"), 1);
   assert.equal(rateOf(state, "EUR"), 0.9);
